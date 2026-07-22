@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { dashboardService } from '../services/dashboard.service'
 import { orderService } from '../services/order.service'
 import StatsCard from '../components/dashboard/StatsCard'
+import RecentOrdersWidget from '../components/dashboard/RecentOrdersWidget'
 import Spinner from '../components/common/Spinner'
 import EmptyState from '../components/common/EmptyState'
 import { formatCurrency, formatDateTime, getOrderStatusColor, getOrderStatusLabel } from '../utils/helpers'
@@ -20,6 +21,13 @@ const SellerDashboard = () => {
 
   useEffect(() => {
     fetchDashboardData()
+
+    // Auto-update polling interval (refetches latest orders & metrics every 30 seconds)
+    const pollInterval = setInterval(() => {
+      fetchDashboardData(false)
+    }, 30000)
+
+    return () => clearInterval(pollInterval)
   }, [])
 
   useEffect(() => {
@@ -203,49 +211,14 @@ const SellerDashboard = () => {
         </div>
       </div>
 
-      {/* Recent Orders List */}
+      {/* Recent Orders Notification Widget & Customer Reviews */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="card p-6 lg:col-span-2 space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-base font-bold text-gray-900">Recent Orders</h2>
-            <Link to="/orders/seller" className="text-xs text-primary-600 font-medium hover:text-primary-700">View all</Link>
-          </div>
-
-          {recentOrders.length > 0 ? (
-            <div className="divide-y divide-gray-100">
-              {recentOrders.map((order) => (
-                <div key={order._id} className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-sm">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-gray-900">ID: {order._id.slice(-8)}</span>
-                      <span className={`badge ${getOrderStatusColor(order.orderStatus)}`}>
-                        {getOrderStatusLabel(order.orderStatus)}
-                      </span>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">Customer: {order.buyer?.name} | {formatDateTime(order.createdAt)}</p>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <p className="font-bold text-primary-600">{formatCurrency(order.totalAmount)}</p>
-                      <p className="text-xxs text-gray-400">{order.items.length} items</p>
-                    </div>
-
-                    {order.orderStatus === 'pending' && (
-                      <button
-                        onClick={() => handleUpdateStatus(order._id, 'accepted')}
-                        disabled={statusLoading}
-                        className="btn btn-primary btn-sm"
-                      >
-                        Accept
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="py-12 text-center text-gray-400">No orders received yet</div>
-          )}
+        <div className="lg:col-span-2">
+          <RecentOrdersWidget
+            orders={recentOrders}
+            onUpdateStatus={handleUpdateStatus}
+            statusLoading={statusLoading}
+          />
         </div>
 
         {/* Customer Reviews Panel */}
