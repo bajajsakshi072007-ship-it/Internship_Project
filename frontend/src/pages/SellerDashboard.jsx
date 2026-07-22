@@ -13,8 +13,10 @@ const SellerDashboard = () => {
   const [data, setData]             = useState(null)
   const [salesData, setSalesData]   = useState([])
   const [isLoading, setIsLoading]   = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const [statusLoading, setStatusLoading] = useState(false)
   const [selectedYear, setSelectedYear]   = useState(new Date().getFullYear())
+  const [lastUpdated, setLastUpdated] = useState(new Date())
 
   useEffect(() => {
     fetchDashboardData()
@@ -24,14 +26,18 @@ const SellerDashboard = () => {
     fetchSalesChart(selectedYear)
   }, [selectedYear])
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = async (manual = false) => {
+    if (manual) setIsRefreshing(true)
     try {
       const res = await dashboardService.getDashboardStats()
       setData(res.data.data)
+      setLastUpdated(new Date())
+      if (manual) toast.success('Dashboard refreshed')
     } catch {
       toast.error('Failed to load dashboard data')
     } finally {
       setIsLoading(false)
+      setIsRefreshing(false)
     }
   }
 
@@ -69,35 +75,59 @@ const SellerDashboard = () => {
 
   return (
     <div className="space-y-8 animate-fade-in">
-      {/* Overview Cards */}
+      {/* Dashboard Header & Refresh Action */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-100">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 font-heading">Artisan Dashboard Overview</h1>
+          <p className="text-xs text-gray-500 mt-1">
+            Real-time sales revenue, order status, and inventory count summary.
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => fetchDashboardData(true)}
+            disabled={isRefreshing}
+            className="btn btn-ghost text-xs flex items-center gap-2"
+            title="Refresh dashboard data"
+          >
+            <span className={isRefreshing ? 'animate-spin' : ''}>🔄</span>
+            {isRefreshing ? 'Refreshing...' : 'Refresh Data'}
+          </button>
+          <Link to="/dashboard/products/new" className="btn btn-primary text-xs">
+            + Add Product
+          </Link>
+        </div>
+      </div>
+
+      {/* Overview KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatsCard
           title="Total Revenue"
           value={formatCurrency(stats.totalRevenue)}
-          icon="Revenue"
+          icon="💰"
           color="success"
           subtitle="Delivered and completed sales"
         />
         <StatsCard
           title="Total Orders"
           value={stats.totalOrders}
-          icon="Orders"
+          icon="📦"
           color="info"
-          subtitle="Received orders"
+          subtitle="Received customer orders"
         />
         <StatsCard
-          title="Active Products"
+          title="Inventory Count"
           value={stats.totalProducts}
-          icon="Products"
+          icon="🎨"
           color="primary"
-          subtitle="Listed on marketplace"
+          subtitle="Active listed products"
         />
         <StatsCard
           title="Pending Orders"
           value={stats.pendingOrders}
-          icon="Pending"
+          icon="⏳"
           color="warning"
-          subtitle="Requires action"
+          subtitle="Action required"
         />
       </div>
 
