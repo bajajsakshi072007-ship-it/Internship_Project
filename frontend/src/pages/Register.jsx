@@ -1,14 +1,25 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { useAuth } from '../context/AuthContext'
+import toast from 'react-hot-toast'
 
 const Register = () => {
-  const { register: registerUser } = useAuth()
+  const { register: registerUser, user: currentUser, isAuthenticated } = useAuth()
   const navigate  = useNavigate()
   const [isLoading, setIsLoading]       = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [selectedRole, setSelectedRole] = useState('buyer')
+
+  useEffect(() => {
+    if (isAuthenticated && currentUser) {
+      if (currentUser.role === 'seller') {
+        navigate('/dashboard', { replace: true })
+      } else {
+        navigate('/', { replace: true })
+      }
+    }
+  }, [isAuthenticated, currentUser, navigate])
 
   const { register, handleSubmit, watch, formState: { errors } } = useForm({
     defaultValues: { role: 'buyer' },
@@ -19,11 +30,25 @@ const Register = () => {
   const onSubmit = async (data) => {
     setIsLoading(true)
     try {
-      const user = await registerUser({ ...data, role: selectedRole })
-      if (user.role === 'seller') navigate('/dashboard', { replace: true })
-      else navigate('/', { replace: true })
-    } catch {}
-    finally { setIsLoading(false) }
+      const payload = {
+        name: data.name,
+        email: data.email,
+        password: data.password,
+        phone: data.phone || undefined,
+        role: selectedRole,
+      }
+      const user = await registerUser(payload)
+      if (user?.role === 'seller') {
+        navigate('/dashboard', { replace: true })
+      } else {
+        navigate('/', { replace: true })
+      }
+    } catch (err) {
+      const msg = err.response?.data?.message || err.message || 'Registration failed. Please try again.'
+      toast.error(msg)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
