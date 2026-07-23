@@ -48,9 +48,10 @@ function App() {
           <Route path="/login"    element={<Login />} />
           <Route path="/register" element={<Register />} />
 
-          {/* Protected: any logged-in user */}
+          {/* Protected: any logged-in user (buyer or seller) */}
           <Route element={<ProtectedRoute />}>
-            <Route path="/profile" element={<Profile />} />
+            <Route path="/profile"    element={<Profile />} />
+            <Route path="/orders/:id" element={<OrderDetails />} />
           </Route>
 
           {/* Protected: buyer only */}
@@ -58,7 +59,6 @@ function App() {
             <Route path="/cart"         element={<Cart />} />
             <Route path="/checkout"     element={<Checkout />} />
             <Route path="/orders"       element={<OrderHistory />} />
-            <Route path="/orders/:id"   element={<OrderDetails />} />
             <Route path="/wishlist"     element={<Wishlist />} />
           </Route>
         </Route>
