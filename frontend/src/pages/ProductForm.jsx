@@ -125,13 +125,15 @@ const ProductForm = () => {
             id="form-title"
             type="text"
             placeholder="e.g. Blue Pottery Vase"
-            className={`form-input ${errors.title ? 'border-red-400' : ''}`}
+            aria-invalid={errors.title ? 'true' : 'false'}
+            aria-describedby={errors.title ? 'title-error' : undefined}
+            className={`form-input ${errors.title ? 'border-red-400 focus:ring-red-400' : ''}`}
             {...register('title', {
               required: 'Title is required',
               minLength: { value: 3, message: 'Title must be at least 3 characters' }
             })}
           />
-          {errors.title && <p className="form-error">{errors.title.message}</p>}
+          {errors.title && <p id="title-error" className="form-error">{errors.title.message}</p>}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -143,13 +145,15 @@ const ProductForm = () => {
               type="number"
               min="1"
               placeholder="1200"
-              className={`form-input ${errors.price ? 'border-red-400' : ''}`}
+              aria-invalid={errors.price ? 'true' : 'false'}
+              aria-describedby={errors.price ? 'price-error' : undefined}
+              className={`form-input ${errors.price ? 'border-red-400 focus:ring-red-400' : ''}`}
               {...register('price', {
                 required: 'Price is required',
                 min: { value: 1, message: 'Price must be greater than 0' }
               })}
             />
-            {errors.price && <p className="form-error">{errors.price.message}</p>}
+            {errors.price && <p id="price-error" className="form-error">{errors.price.message}</p>}
           </div>
 
           {/* Stock */}
@@ -160,13 +164,15 @@ const ProductForm = () => {
               type="number"
               min="0"
               placeholder="10"
-              className={`form-input ${errors.stock ? 'border-red-400' : ''}`}
+              aria-invalid={errors.stock ? 'true' : 'false'}
+              aria-describedby={errors.stock ? 'stock-error' : undefined}
+              className={`form-input ${errors.stock ? 'border-red-400 focus:ring-red-400' : ''}`}
               {...register('stock', {
                 required: 'Stock is required',
                 min: { value: 0, message: 'Stock cannot be negative' }
               })}
             />
-            {errors.stock && <p className="form-error">{errors.stock.message}</p>}
+            {errors.stock && <p id="stock-error" className="form-error">{errors.stock.message}</p>}
           </div>
 
           {/* Category */}
@@ -174,7 +180,9 @@ const ProductForm = () => {
             <label className="form-label" htmlFor="form-category">Category *</label>
             <select
               id="form-category"
-              className={`form-input ${errors.category ? 'border-red-400' : ''}`}
+              aria-invalid={errors.category ? 'true' : 'false'}
+              aria-describedby={errors.category ? 'category-error' : undefined}
+              className={`form-input ${errors.category ? 'border-red-400 focus:ring-red-400' : ''}`}
               {...register('category', { required: 'Category is required' })}
             >
               <option value="">Select Category</option>
@@ -182,7 +190,7 @@ const ProductForm = () => {
                 <option key={cat} value={cat}>{cat}</option>
               ))}
             </select>
-            {errors.category && <p className="form-error">{errors.category.message}</p>}
+            {errors.category && <p id="category-error" className="form-error">{errors.category.message}</p>}
           </div>
         </div>
 
@@ -193,13 +201,15 @@ const ProductForm = () => {
             id="form-desc"
             rows={5}
             placeholder="Describe the handicraft process, material used, and uniqueness of this product..."
-            className={`form-input resize-none ${errors.description ? 'border-red-400' : ''}`}
+            aria-invalid={errors.description ? 'true' : 'false'}
+            aria-describedby={errors.description ? 'desc-error' : undefined}
+            className={`form-input resize-none ${errors.description ? 'border-red-400 focus:ring-red-400' : ''}`}
             {...register('description', {
               required: 'Description is required',
               minLength: { value: 10, message: 'Description must be at least 10 characters' }
             })}
           />
-          {errors.description && <p className="form-error">{errors.description.message}</p>}
+          {errors.description && <p id="desc-error" className="form-error">{errors.description.message}</p>}
         </div>
 
         {/* Tags */}
