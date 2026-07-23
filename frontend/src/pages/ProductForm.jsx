@@ -130,7 +130,8 @@ const ProductForm = () => {
             className={`form-input ${errors.title ? 'border-red-400 focus:ring-red-400' : ''}`}
             {...register('title', {
               required: 'Title is required',
-              minLength: { value: 3, message: 'Title must be at least 3 characters' }
+              minLength: { value: 3, message: 'Title must be at least 3 characters' },
+              maxLength: { value: 100, message: 'Title cannot exceed 100 characters' }
             })}
           />
           {errors.title && <p id="title-error" className="form-error">{errors.title.message}</p>}
@@ -206,7 +207,8 @@ const ProductForm = () => {
             className={`form-input resize-none ${errors.description ? 'border-red-400 focus:ring-red-400' : ''}`}
             {...register('description', {
               required: 'Description is required',
-              minLength: { value: 10, message: 'Description must be at least 10 characters' }
+              minLength: { value: 10, message: 'Description must be at least 10 characters' },
+              maxLength: { value: 2000, message: 'Description cannot exceed 2000 characters' }
             })}
           />
           {errors.description && <p id="desc-error" className="form-error">{errors.description.message}</p>}
