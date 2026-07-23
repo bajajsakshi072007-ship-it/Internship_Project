@@ -21,7 +21,7 @@ const RecentOrdersWidget = ({ orders = [], onUpdateStatus, statusLoading }) => {
           </span>
         </div>
         <Link
-          to="/orders/seller"
+          to="/dashboard/orders"
           className="text-xs text-primary-600 font-semibold hover:text-primary-700 transition-colors"
         >
           View all ({orders.length}) →
