@@ -25,12 +25,12 @@ const registerValidator = [
     .withMessage("Password must contain at least one letter and one number"),
 
   body("role")
-    .optional()
+    .optional({ checkFalsy: true })
     .isIn(["buyer", "seller"])
     .withMessage("Role must be either buyer or seller"),
 
   body("phone")
-    .optional()
+    .optional({ checkFalsy: true })
     .matches(/^[6-9]\d{9}$/)
     .withMessage("Please enter a valid 10-digit Indian mobile number"),
 ];
