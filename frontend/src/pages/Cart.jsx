@@ -1,6 +1,5 @@
 import React from 'react'
-import { Link } from 'react-pointer-sdk' // wait, Link is from react-router-dom, let's make sure it's correct
-import { Link as RouterLink } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useCart } from '../hooks/useCart'
 import { formatCurrency, calcCartTotal } from '../utils/helpers'
 import EmptyState from '../components/common/EmptyState'
@@ -72,7 +71,7 @@ const Cart = () => {
                 
                 <div className="flex-1 min-w-0 text-center sm:text-left">
                   <h3 className="font-semibold text-gray-900 text-sm truncate hover:text-primary-600">
-                    <RouterLink to={`/products/${prod._id}`}>{prod.title}</RouterLink>
+                    <Link to={`/products/${prod._id}`}>{prod.title}</Link>
                   </h3>
                   <p className="text-xs text-gray-500 mt-0.5">Seller: {prod.seller?.name || 'Artisan'}</p>
                   <p className="text-sm font-semibold text-primary-600 mt-2">{formatCurrency(prod.price)}</p>
@@ -131,13 +130,13 @@ const Cart = () => {
             <span>{formatCurrency(total)}</span>
           </div>
 
-          <RouterLink to="/checkout" className="btn btn-primary w-full btn-lg">
+          <Link to="/checkout" className="btn btn-primary w-full btn-lg">
             Proceed to Checkout
-          </RouterLink>
+          </Link>
           
-          <RouterLink to="/products" className="btn btn-ghost w-full text-xs">
+          <Link to="/products" className="btn btn-ghost w-full text-xs">
             Continue Shopping
-          </RouterLink>
+          </Link>
         </div>
       </div>
     </div>

@@ -12,15 +12,30 @@ const { deleteImage } = require("../services/cloudinary.service");
 const register = asyncHandler(async (req, res) => {
   const { name, email, password, role, phone } = req.body;
 
-  const existingUser = await User.findOne({ email });
+  const normalizedEmail = email ? email.toLowerCase().trim() : "";
+
+  const existingUser = await User.findOne({ email: normalizedEmail });
   if (existingUser) {
     throw new ApiError(409, "An account with this email already exists");
   }
 
-  const user = await User.create({ name, email, password, role, phone });
+  const user = await User.create({
+    name,
+    email: normalizedEmail,
+    password,
+    role: role || "buyer",
+    phone,
+  });
+
   const token = generateToken({ id: user._id, role: user.role });
 
-  return sendSuccess(res, 201, "Registration successful", { user, token });
+  const userResponse = user.toObject();
+  delete userResponse.password;
+
+  return sendSuccess(res, 201, "Registration successful", {
+    user: userResponse,
+    token,
+  });
 });
 
 // ─────────────────────────────────────────
