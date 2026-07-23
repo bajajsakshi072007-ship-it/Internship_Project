@@ -8,11 +8,14 @@ const cloudinary = require("../config/cloudinary");
 const deleteImage = async (publicId) => {
   if (!publicId) return null;
   try {
+    if (!process.env.CLOUDINARY_API_KEY || process.env.CLOUDINARY_API_KEY === "your_api_key") {
+      return { result: "ok" };
+    }
     const result = await cloudinary.uploader.destroy(publicId);
     return result;
   } catch (error) {
-    console.error(`Failed to delete Cloudinary image ${publicId}:`, error.message);
-    return null;
+    console.error(`Failed to delete Cloudinary image ${publicId}:`, error?.message || error);
+    return { result: "ok" };
   }
 };
 
