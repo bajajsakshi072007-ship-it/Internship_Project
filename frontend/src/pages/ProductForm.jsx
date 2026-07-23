@@ -233,6 +233,8 @@ const ProductForm = () => {
           onNewImages={(files) => setNewImages((prev) => [...prev, ...files])}
           onRemoveNew={removeNewImage}
           onRemoveExisting={removeExistingImage}
+          onReorderExisting={(reordered) => setExistingImages(reordered)}
+          onReorderNew={(reordered) => setNewImages(reordered)}
         />
 
         {/* Buttons */}
