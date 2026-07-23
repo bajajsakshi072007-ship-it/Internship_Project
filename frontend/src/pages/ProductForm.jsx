@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form'
 import { productService } from '../services/product.service'
 import { PRODUCT_CATEGORIES } from '../utils/constants'
 import Spinner from '../components/common/Spinner'
+import ImageUploader from '../components/product/ImageUploader'
 import toast from 'react-hot-toast'
 
 const ProductForm = () => {
@@ -47,14 +48,6 @@ const ProductForm = () => {
     }
   }
 
-  const handleImageChange = (e) => {
-    const files = Array.from(e.target.files)
-    if (files.length + existingImages.length + newImages.length > 5) {
-      toast.error('Maximum of 5 images allowed per product')
-      return
-    }
-    setNewImages((prev) => [...prev, ...files])
-  }
 
   const removeNewImage = (idx) => {
     setNewImages((prev) => prev.filter((_, i) => i !== idx))
@@ -222,55 +215,13 @@ const ProductForm = () => {
         </div>
 
         {/* Image Upload Area */}
-        <div className="space-y-4">
-          <label className="form-label">Product Images * <span className="text-gray-400">(Max 5 images, up to 5MB each)</span></label>
-          
-          {/* File Input */}
-          <div className="flex items-center justify-center border-2 border-dashed border-gray-200 rounded-xl p-6 bg-gray-50/50 hover:bg-gray-50 transition-colors cursor-pointer">
-            <label className="text-center cursor-pointer">
-              <span className="text-sm font-semibold text-primary-600 block">Click to upload images</span>
-              <span className="text-xs text-gray-500 block mt-1">Supports JPG, PNG, WebP</span>
-              <input
-                type="file"
-                multiple
-                accept="image/*"
-                onChange={handleImageChange}
-                className="hidden"
-              />
-            </label>
-          </div>
-
-          {/* Preview grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-            {/* Existing Images */}
-            {existingImages.map((img) => (
-              <div key={img.publicId} className="relative aspect-square rounded-xl overflow-hidden group bg-gray-100">
-                <img src={img.url} alt="product" className="w-full h-full object-cover" />
-                <button
-                  type="button"
-                  onClick={() => removeExistingImage(img.publicId)}
-                  className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-xs font-semibold text-white transition-opacity"
-                >
-                  Delete
-                </button>
-              </div>
-            ))}
-
-            {/* New Images previews */}
-            {newImages.map((file, idx) => (
-              <div key={idx} className="relative aspect-square rounded-xl overflow-hidden group bg-gray-100">
-                <img src={URL.createObjectURL(file)} alt="preview" className="w-full h-full object-cover" />
-                <button
-                  type="button"
-                  onClick={() => removeNewImage(idx)}
-                  className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-xs font-semibold text-white transition-opacity"
-                >
-                  Remove
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
+        <ImageUploader
+          existingImages={existingImages}
+          newImages={newImages}
+          onNewImages={(files) => setNewImages((prev) => [...prev, ...files])}
+          onRemoveNew={removeNewImage}
+          onRemoveExisting={removeExistingImage}
+        />
 
         {/* Buttons */}
         <div className="flex gap-3 pt-4 border-t border-gray-100">

@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext'
 import { useCart } from '../context/CartContext'
 import { useWishlist } from '../context/WishlistContext'
 import ProductGrid from '../components/product/ProductGrid'
+import ImageGallery from '../components/product/ImageGallery'
 import StarRating from '../components/review/StarRating'
 import ReviewCard from '../components/review/ReviewCard'
 import ReviewForm from '../components/review/ReviewForm'
@@ -24,7 +25,6 @@ const ProductDetails = () => {
   const [data, setData]             = useState(null)
   const [reviews, setReviews]       = useState([])
   const [isLoading, setIsLoading]   = useState(true)
-  const [activeImage, setActiveImage] = useState(0)
   const [quantity, setQuantity]     = useState(1)
   const [showReviewForm, setShowReviewForm] = useState(false)
   const [addingToCart, setAddingToCart]     = useState(false)
@@ -42,7 +42,6 @@ const ProductDetails = () => {
       const res = await productService.getProductById(id)
       setData(res.data.data)
       setReviews(res.data.data.product?.reviews || [])
-      setActiveImage(0)
     } catch (err) {
       toast.error('Product not found')
     } finally {
@@ -106,30 +105,12 @@ const ProductDetails = () => {
       </nav>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-16">
-        {/* Images */}
+        {/* Images — ImageGallery component */}
         <div className="space-y-3">
-          <div className="relative aspect-square rounded-2xl overflow-hidden bg-gray-100">
-            <img
-              src={images[activeImage]?.url}
-              alt={product.title}
-              className="w-full h-full object-cover"
-            />
-          </div>
-          {images.length > 1 && (
-            <div className="flex gap-2 overflow-x-auto no-scrollbar">
-              {images.map((img, i) => (
-                <button
-                  key={i}
-                  onClick={() => setActiveImage(i)}
-                  className={`flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden ring-2 transition-all ${
-                    activeImage === i ? 'ring-primary-500' : 'ring-transparent'
-                  }`}
-                >
-                  <img src={img.url} alt={`${product.title} ${i + 1}`} className="w-full h-full object-cover" />
-                </button>
-              ))}
-            </div>
-          )}
+          <ImageGallery
+            images={images}
+            alt={product.title}
+          />
         </div>
 
         {/* Details */}
