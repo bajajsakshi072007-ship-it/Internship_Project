@@ -35,9 +35,11 @@ const createProductValidator = [
     .withMessage("Stock must be a non-negative integer"),
 
   body("tags")
-    .optional()
-    .isArray()
-    .withMessage("Tags must be an array"),
+    .optional({ checkFalsy: true })
+    .custom((value) => {
+      if (typeof value === "string" || Array.isArray(value)) return true;
+      throw new Error("Tags must be a string or array of strings");
+    }),
 ];
 
 const updateProductValidator = [
