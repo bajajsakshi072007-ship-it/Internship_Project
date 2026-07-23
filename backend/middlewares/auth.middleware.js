@@ -21,7 +21,8 @@ const protect = asyncHandler(async (req, res, next) => {
 
   let decoded;
   try {
-    decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const secret = process.env.JWT_SECRET || "default_jwt_secret_artisan_marketplace_2026";
+    decoded = jwt.verify(token, secret);
   } catch (err) {
     if (err.name === "TokenExpiredError") {
       throw new ApiError(401, "Token has expired. Please login again.");
