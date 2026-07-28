@@ -1,7 +1,7 @@
 const Product = require("../models/Product.model");
 const asyncHandler = require("../utils/asyncHandler");
 const { sendSuccess, ApiError } = require("../utils/apiResponse");
-const { deleteImages, extractImageData } = require("../services/cloudinary.service");
+const { deleteImage, deleteImages, extractImageData } = require("../services/cloudinary.service");
 const { PAGINATION } = require("../utils/constants");
 
 // ─────────────────────────────────────────
@@ -122,9 +122,16 @@ const getProductById = asyncHandler(async (req, res) => {
 // @access  Private (Seller only)
 // ─────────────────────────────────────────
 const createProduct = asyncHandler(async (req, res) => {
-  const { title, description, price, category, stock, tags } = req.body;
+  const { title, description, price, category, stock, tags, images: bodyImages } = req.body;
 
-  const images = req.files ? extractImageData(req.files) : [];
+  let images = req.files ? extractImageData(req.files) : [];
+  if (images.length === 0 && bodyImages) {
+    try {
+      images = typeof bodyImages === "string" ? JSON.parse(bodyImages) : bodyImages;
+    } catch {
+      images = [];
+    }
+  }
 
   const product = await Product.create({
     seller: req.user._id,
@@ -154,7 +161,7 @@ const updateProduct = asyncHandler(async (req, res) => {
     throw new ApiError(403, "You are not authorized to edit this product");
   }
 
-  const { title, description, price, category, stock, tags } = req.body;
+  const { title, description, price, category, stock, tags, images: bodyImages } = req.body;
 
   if (title) product.title = title;
   if (description) product.description = description;
@@ -163,7 +170,7 @@ const updateProduct = asyncHandler(async (req, res) => {
   if (stock !== undefined) product.stock = Number(stock);
   if (tags) product.tags = Array.isArray(tags) ? tags : [tags];
 
-  // Handle new image uploads
+  // Handle new image uploads via files
   if (req.files && req.files.length > 0) {
     const totalImages = product.images.length + req.files.length;
     if (totalImages > 5) {
@@ -171,6 +178,13 @@ const updateProduct = asyncHandler(async (req, res) => {
     }
     const newImages = extractImageData(req.files);
     product.images = [...product.images, ...newImages];
+  } else if (bodyImages) {
+    try {
+      const parsed = typeof bodyImages === "string" ? JSON.parse(bodyImages) : bodyImages;
+      if (Array.isArray(parsed) && parsed.length <= 5) {
+        product.images = parsed;
+      }
+    } catch {}
   }
 
   await product.save();
@@ -218,7 +232,6 @@ const removeProductImage = asyncHandler(async (req, res) => {
   await product.save();
 
   // Delete from Cloudinary
-  const { deleteImage } = require("../services/cloudinary.service");
   await deleteImage(decodedPublicId);
 
   return sendSuccess(res, 200, "Image removed successfully", product);

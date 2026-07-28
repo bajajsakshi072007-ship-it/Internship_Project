@@ -131,23 +131,42 @@ const OrderDetails = () => {
           </div>
 
           {/* Delivery & Shipping */}
-          <div className="card p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="card p-6 grid grid-cols-1 md:grid-cols-2 gap-6 bg-white rounded-2xl border border-gray-100 shadow-sm">
             <div>
-              <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Shipping Address</h2>
-              <div className="text-sm text-gray-700 space-y-1">
-                <p className="font-semibold text-gray-900">{order.shippingAddress.name}</p>
-                <p>Phone: {order.shippingAddress.phone}</p>
-                <p>{order.shippingAddress.street}</p>
-                <p>{order.shippingAddress.city}, {order.shippingAddress.state} - {order.shippingAddress.pincode}</p>
-                <p>{order.shippingAddress.country}</p>
+              <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Shipping Address</h2>
+              <div className="text-sm text-gray-700 space-y-1.5">
+                <p className="font-bold text-gray-900 text-base">{order.shippingAddress?.name}</p>
+                <p className="flex items-center gap-1 text-gray-600">📞 <span className="font-medium">{order.shippingAddress?.phone}</span></p>
+                <p className="text-gray-600">{order.shippingAddress?.street}</p>
+                <p className="text-gray-600">{order.shippingAddress?.city}, {order.shippingAddress?.state} - <span className="font-mono font-medium">{order.shippingAddress?.pincode}</span></p>
+                <p className="text-gray-500 font-medium">{order.shippingAddress?.country || 'India'}</p>
               </div>
             </div>
 
             <div>
-              <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Payment Info</h2>
-              <div className="text-sm text-gray-700 space-y-1">
-                <p>Payment Method: <span className="font-medium text-gray-950 capitalize">{order.paymentMethod}</span></p>
-                <p>Payment Status: <span className="font-medium text-gray-950 capitalize">{order.paymentStatus}</span></p>
+              <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Payment & Parties</h2>
+              <div className="text-sm text-gray-700 space-y-2">
+                <div>
+                  <p className="text-xs text-gray-400">Payment Option:</p>
+                  <p className="font-semibold text-gray-900 capitalize">{order.paymentMethod === 'cod' ? 'Cash on Delivery (COD)' : order.paymentMethod}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400">Payment Status:</p>
+                  <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-bold capitalize ${order.paymentStatus === 'paid' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                    {order.paymentStatus}
+                  </span>
+                </div>
+                {order.buyer && (
+                  <div className="pt-2 border-t border-gray-100 flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-bold text-xs">
+                      👤
+                    </div>
+                    <div className="text-xs min-w-0">
+                      <p className="font-semibold text-gray-900 truncate">{order.buyer.name}</p>
+                      <p className="text-gray-400 truncate">{order.buyer.email}</p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

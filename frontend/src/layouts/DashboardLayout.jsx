@@ -9,6 +9,7 @@ const DashboardLayout = () => {
 
   const navItems = [
     { to: '/dashboard',          label: 'Overview',      icon: '', end: true },
+    { to: '/dashboard/orders',    label: 'Order History', icon: '' },
     { to: '/dashboard/products', label: 'My Products',   icon: '' },
   ]
 

@@ -47,11 +47,11 @@ const getDashboardStats = asyncHandler(async (req, res) => {
       .sort({ stock: 1 })
       .limit(5),
 
-    // Recent orders
+    // Recent orders (latest seller orders)
     Order.find({ seller: sellerId })
       .populate("buyer", "name email avatar")
       .sort({ createdAt: -1 })
-      .limit(5),
+      .limit(10),
 
     // Recent reviews on seller's products
     Review.find({})

@@ -20,6 +20,7 @@ const OrderDetails    = lazy(() => import('./pages/OrderDetails.jsx'))
 const Wishlist        = lazy(() => import('./pages/Wishlist.jsx'))
 const SellerDashboard = lazy(() => import('./pages/SellerDashboard.jsx'))
 const SellerProducts  = lazy(() => import('./pages/SellerProducts.jsx'))
+const SellerOrderHistory = lazy(() => import('./pages/SellerOrderHistory.jsx'))
 const ProductForm     = lazy(() => import('./pages/ProductForm.jsx'))
 const About           = lazy(() => import('./pages/About.jsx'))
 const Contact         = lazy(() => import('./pages/Contact.jsx'))
@@ -47,9 +48,10 @@ function App() {
           <Route path="/login"    element={<Login />} />
           <Route path="/register" element={<Register />} />
 
-          {/* Protected: any logged-in user */}
+          {/* Protected: any logged-in user (buyer or seller) */}
           <Route element={<ProtectedRoute />}>
-            <Route path="/profile" element={<Profile />} />
+            <Route path="/profile"    element={<Profile />} />
+            <Route path="/orders/:id" element={<OrderDetails />} />
           </Route>
 
           {/* Protected: buyer only */}
@@ -57,7 +59,6 @@ function App() {
             <Route path="/cart"         element={<Cart />} />
             <Route path="/checkout"     element={<Checkout />} />
             <Route path="/orders"       element={<OrderHistory />} />
-            <Route path="/orders/:id"   element={<OrderDetails />} />
             <Route path="/wishlist"     element={<Wishlist />} />
           </Route>
         </Route>
@@ -66,6 +67,7 @@ function App() {
         <Route element={<RoleRoute role="seller" />}>
           <Route element={<DashboardLayout />}>
             <Route path="/dashboard"                 element={<SellerDashboard />} />
+            <Route path="/dashboard/orders"          element={<SellerOrderHistory />} />
             <Route path="/dashboard/products"        element={<SellerProducts />} />
             <Route path="/dashboard/products/new"    element={<ProductForm />} />
             <Route path="/dashboard/products/:id/edit" element={<ProductForm />} />

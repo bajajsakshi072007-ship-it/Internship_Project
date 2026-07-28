@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form'
 import { productService } from '../services/product.service'
 import { PRODUCT_CATEGORIES } from '../utils/constants'
 import Spinner from '../components/common/Spinner'
+import ImageUploader from '../components/product/ImageUploader'
 import toast from 'react-hot-toast'
 
 const ProductForm = () => {
@@ -47,14 +48,6 @@ const ProductForm = () => {
     }
   }
 
-  const handleImageChange = (e) => {
-    const files = Array.from(e.target.files)
-    if (files.length + existingImages.length + newImages.length > 5) {
-      toast.error('Maximum of 5 images allowed per product')
-      return
-    }
-    setNewImages((prev) => [...prev, ...files])
-  }
 
   const removeNewImage = (idx) => {
     setNewImages((prev) => prev.filter((_, i) => i !== idx))
@@ -132,13 +125,16 @@ const ProductForm = () => {
             id="form-title"
             type="text"
             placeholder="e.g. Blue Pottery Vase"
-            className={`form-input ${errors.title ? 'border-red-400' : ''}`}
+            aria-invalid={errors.title ? 'true' : 'false'}
+            aria-describedby={errors.title ? 'title-error' : undefined}
+            className={`form-input ${errors.title ? 'border-red-400 focus:ring-red-400' : ''}`}
             {...register('title', {
               required: 'Title is required',
-              minLength: { value: 3, message: 'Title must be at least 3 characters' }
+              minLength: { value: 3, message: 'Title must be at least 3 characters' },
+              maxLength: { value: 100, message: 'Title cannot exceed 100 characters' }
             })}
           />
-          {errors.title && <p className="form-error">{errors.title.message}</p>}
+          {errors.title && <p id="title-error" className="form-error">{errors.title.message}</p>}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -150,13 +146,15 @@ const ProductForm = () => {
               type="number"
               min="1"
               placeholder="1200"
-              className={`form-input ${errors.price ? 'border-red-400' : ''}`}
+              aria-invalid={errors.price ? 'true' : 'false'}
+              aria-describedby={errors.price ? 'price-error' : undefined}
+              className={`form-input ${errors.price ? 'border-red-400 focus:ring-red-400' : ''}`}
               {...register('price', {
                 required: 'Price is required',
                 min: { value: 1, message: 'Price must be greater than 0' }
               })}
             />
-            {errors.price && <p className="form-error">{errors.price.message}</p>}
+            {errors.price && <p id="price-error" className="form-error">{errors.price.message}</p>}
           </div>
 
           {/* Stock */}
@@ -167,13 +165,15 @@ const ProductForm = () => {
               type="number"
               min="0"
               placeholder="10"
-              className={`form-input ${errors.stock ? 'border-red-400' : ''}`}
+              aria-invalid={errors.stock ? 'true' : 'false'}
+              aria-describedby={errors.stock ? 'stock-error' : undefined}
+              className={`form-input ${errors.stock ? 'border-red-400 focus:ring-red-400' : ''}`}
               {...register('stock', {
                 required: 'Stock is required',
                 min: { value: 0, message: 'Stock cannot be negative' }
               })}
             />
-            {errors.stock && <p className="form-error">{errors.stock.message}</p>}
+            {errors.stock && <p id="stock-error" className="form-error">{errors.stock.message}</p>}
           </div>
 
           {/* Category */}
@@ -181,7 +181,9 @@ const ProductForm = () => {
             <label className="form-label" htmlFor="form-category">Category *</label>
             <select
               id="form-category"
-              className={`form-input ${errors.category ? 'border-red-400' : ''}`}
+              aria-invalid={errors.category ? 'true' : 'false'}
+              aria-describedby={errors.category ? 'category-error' : undefined}
+              className={`form-input ${errors.category ? 'border-red-400 focus:ring-red-400' : ''}`}
               {...register('category', { required: 'Category is required' })}
             >
               <option value="">Select Category</option>
@@ -189,7 +191,7 @@ const ProductForm = () => {
                 <option key={cat} value={cat}>{cat}</option>
               ))}
             </select>
-            {errors.category && <p className="form-error">{errors.category.message}</p>}
+            {errors.category && <p id="category-error" className="form-error">{errors.category.message}</p>}
           </div>
         </div>
 
@@ -200,13 +202,16 @@ const ProductForm = () => {
             id="form-desc"
             rows={5}
             placeholder="Describe the handicraft process, material used, and uniqueness of this product..."
-            className={`form-input resize-none ${errors.description ? 'border-red-400' : ''}`}
+            aria-invalid={errors.description ? 'true' : 'false'}
+            aria-describedby={errors.description ? 'desc-error' : undefined}
+            className={`form-input resize-none ${errors.description ? 'border-red-400 focus:ring-red-400' : ''}`}
             {...register('description', {
               required: 'Description is required',
-              minLength: { value: 10, message: 'Description must be at least 10 characters' }
+              minLength: { value: 10, message: 'Description must be at least 10 characters' },
+              maxLength: { value: 2000, message: 'Description cannot exceed 2000 characters' }
             })}
           />
-          {errors.description && <p className="form-error">{errors.description.message}</p>}
+          {errors.description && <p id="desc-error" className="form-error">{errors.description.message}</p>}
         </div>
 
         {/* Tags */}
@@ -222,55 +227,15 @@ const ProductForm = () => {
         </div>
 
         {/* Image Upload Area */}
-        <div className="space-y-4">
-          <label className="form-label">Product Images * <span className="text-gray-400">(Max 5 images, up to 5MB each)</span></label>
-          
-          {/* File Input */}
-          <div className="flex items-center justify-center border-2 border-dashed border-gray-200 rounded-xl p-6 bg-gray-50/50 hover:bg-gray-50 transition-colors cursor-pointer">
-            <label className="text-center cursor-pointer">
-              <span className="text-sm font-semibold text-primary-600 block">Click to upload images</span>
-              <span className="text-xs text-gray-500 block mt-1">Supports JPG, PNG, WebP</span>
-              <input
-                type="file"
-                multiple
-                accept="image/*"
-                onChange={handleImageChange}
-                className="hidden"
-              />
-            </label>
-          </div>
-
-          {/* Preview grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-            {/* Existing Images */}
-            {existingImages.map((img) => (
-              <div key={img.publicId} className="relative aspect-square rounded-xl overflow-hidden group bg-gray-100">
-                <img src={img.url} alt="product" className="w-full h-full object-cover" />
-                <button
-                  type="button"
-                  onClick={() => removeExistingImage(img.publicId)}
-                  className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-xs font-semibold text-white transition-opacity"
-                >
-                  Delete
-                </button>
-              </div>
-            ))}
-
-            {/* New Images previews */}
-            {newImages.map((file, idx) => (
-              <div key={idx} className="relative aspect-square rounded-xl overflow-hidden group bg-gray-100">
-                <img src={URL.createObjectURL(file)} alt="preview" className="w-full h-full object-cover" />
-                <button
-                  type="button"
-                  onClick={() => removeNewImage(idx)}
-                  className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-xs font-semibold text-white transition-opacity"
-                >
-                  Remove
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
+        <ImageUploader
+          existingImages={existingImages}
+          newImages={newImages}
+          onNewImages={(files) => setNewImages((prev) => [...prev, ...files])}
+          onRemoveNew={removeNewImage}
+          onRemoveExisting={removeExistingImage}
+          onReorderExisting={(reordered) => setExistingImages(reordered)}
+          onReorderNew={(reordered) => setNewImages(reordered)}
+        />
 
         {/* Buttons */}
         <div className="flex gap-3 pt-4 border-t border-gray-100">
