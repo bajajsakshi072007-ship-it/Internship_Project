@@ -20,7 +20,7 @@ const wishlistSchema = new mongoose.Schema(
   }
 );
 
-wishlistSchema.index({ buyer: 1 });
+// Note: buyer index is already created implicitly via `unique: true` in the schema field.
 
 const Wishlist = mongoose.model("Wishlist", wishlistSchema);
 

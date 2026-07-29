@@ -91,7 +91,7 @@ userSchema.methods.toJSON = function () {
 // ─────────────────────────────────────────
 // Indexes
 // ─────────────────────────────────────────
-userSchema.index({ email: 1 });
+// Note: email index is already created implicitly via `unique: true` in the schema field.
 userSchema.index({ role: 1 });
 
 const User = mongoose.model("User", userSchema);

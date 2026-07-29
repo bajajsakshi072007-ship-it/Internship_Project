@@ -39,7 +39,7 @@ cartSchema.virtual("totalItems").get(function () {
   return this.items.reduce((sum, item) => sum + item.quantity, 0);
 });
 
-cartSchema.index({ buyer: 1 });
+// Note: buyer index is already created implicitly via `unique: true` in the schema field.
 
 const Cart = mongoose.model("Cart", cartSchema);
 
