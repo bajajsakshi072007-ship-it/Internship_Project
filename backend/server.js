@@ -1,130 +1,61 @@
-require("dotenv").config();
+const express = require('express');
+const cors = require('cors');
+const path = require('path');
+const dotenv = require('dotenv');
+const connectDB = require('./config/db');
 
-const express = require("express");
-const helmet = require("helmet");
-const cors = require("cors");
-const mongoSanitize = require("express-mongo-sanitize");
-const xss = require("xss-clean");
-
-const connectDB = require("./config/db");
-const { generalLimiter, authLimiter } = require("./middlewares/rateLimiter.middleware");
-const errorMiddleware = require("./middlewares/error.middleware");
-
-// Route imports
-const authRoutes = require("./routes/auth.routes");
-const productRoutes = require("./routes/product.routes");
-const orderRoutes = require("./routes/order.routes");
-const reviewRoutes = require("./routes/review.routes");
-const cartRoutes = require("./routes/cart.routes");
-const wishlistRoutes = require("./routes/wishlist.routes");
-const dashboardRoutes = require("./routes/dashboard.routes");
-const uploadRoutes = require("./routes/upload.routes");
+dotenv.config();
 
 // Connect to MongoDB
 connectDB();
 
 const app = express();
 
-// ─────────────────────────────────────────
-// Security Middlewares
-// ─────────────────────────────────────────
-app.use(
-  helmet({
-    crossOriginResourcePolicy: { policy: "cross-origin" },
-  })
-);
+// Enable CORS for frontend connection
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
-app.use(
-  cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+app.use(express.json({ limit: '15mb' }));
+app.use(express.urlencoded({ extended: true, limit: '15mb' }));
 
-// Data sanitization against NoSQL injection
-app.use(mongoSanitize());
+// Static directory for uploaded images (fallback mode)
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Data sanitization against XSS attacks
-app.use(xss());
+// Routes setup
+app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/products', require('./routes/productRoutes'));
+app.use('/api/orders', require('./routes/orderRoutes'));
+app.use('/api/reviews', require('./routes/reviewRoutes'));
+app.use('/api/upload', require('./routes/uploadRoutes'));
 
-// ─────────────────────────────────────────
-// Body Parser Middlewares
-// ─────────────────────────────────────────
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true, limit: "10mb" }));
-
-// ─────────────────────────────────────────
-// Rate Limiting
-// ─────────────────────────────────────────
-app.use("/api/auth", authLimiter);
-app.use("/api", generalLimiter);
-
-// ─────────────────────────────────────────
-// Health Check
-// ─────────────────────────────────────────
-app.get("/", (req, res) => {
+// Health check endpoint
+app.get('/api/health', (req, res) => {
   res.json({
-    success: true,
-    message: "Rural Artisan Marketplace API is running",
-    version: "1.0.0",
-    timestamp: new Date().toISOString(),
+    status: 'OK',
+    message: 'GraminCraft Backend API running smoothly',
+    timestamp: new Date()
   });
 });
 
-app.get("/api/health", (req, res) => {
-  res.json({ success: true, message: "API is healthy", uptime: process.uptime() });
+// Root API welcome
+app.get('/', (req, res) => {
+  res.send('GraminCraft - Local Artisan E-Commerce Platform API is active.');
 });
 
-// ─────────────────────────────────────────
-// API Routes
-// ─────────────────────────────────────────
-app.use("/api/auth", authRoutes);
-app.use("/api/products", productRoutes);
-app.use("/api/orders", orderRoutes);
-app.use("/api/reviews", reviewRoutes);
-app.use("/api/cart", cartRoutes);
-app.use("/api/wishlist", wishlistRoutes);
-app.use("/api/dashboard", dashboardRoutes);
-app.use("/api/upload", uploadRoutes);
-
-// ─────────────────────────────────────────
-// 404 Handler
-// ─────────────────────────────────────────
-app.use("*", (req, res) => {
-  res.status(404).json({
-    success: false,
-    message: `Route ${req.originalUrl} not found`,
+// Global Error Handler
+app.use((err, req, res, next) => {
+  console.error('Unhandled Server Error:', err);
+  res.status(err.status || 500).json({
+    message: err.message || 'Internal Server Error',
+    error: process.env.NODE_ENV === 'production' ? null : err.stack
   });
 });
 
-// ─────────────────────────────────────────
-// Centralized Error Handler
-// ─────────────────────────────────────────
-app.use(errorMiddleware);
-
-// ─────────────────────────────────────────
-// Start Server
-// ─────────────────────────────────────────
 const PORT = process.env.PORT || 5000;
 
-const server = app.listen(PORT, () => {
-  console.log(
-    `Server running in ${process.env.NODE_ENV || "development"} mode on port ${PORT}`
-  );
+app.listen(PORT, () => {
+  console.log(`[GraminCraft API Server] Running on http://localhost:${PORT}`);
 });
-
-// Handle unhandled promise rejections
-process.on("unhandledRejection", (err) => {
-  console.error(`Unhandled Rejection: ${err.message}`);
-  server.close(() => process.exit(1));
-});
-
-// Handle uncaught exceptions
-process.on("uncaughtException", (err) => {
-  console.error(`Uncaught Exception: ${err.message}`);
-  process.exit(1);
-});
-
-module.exports = app;
