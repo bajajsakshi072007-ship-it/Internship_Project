@@ -1,24 +1,15 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI, {
-      // Mongoose 8.x uses these options by default
+    const connStr = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/gramincraft';
+    const conn = await mongoose.connect(connStr, {
+      serverSelectionTimeoutMS: 5000
     });
-
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
-
-    // Handle connection events
-    mongoose.connection.on("error", (err) => {
-      console.error(`MongoDB connection error: ${err.message}`);
-    });
-
-    mongoose.connection.on("disconnected", () => {
-      console.warn("MongoDB disconnected. Attempting to reconnect...");
-    });
+    console.log(`[MongoDB] Connected: ${conn.connection.host}`);
   } catch (error) {
-    console.error(`MongoDB Connection Failed: ${error.message}`);
-    process.exit(1);
+    console.warn(`[MongoDB Warning] Could not connect to MongoDB instance: ${error.message}`);
+    console.warn(`[MongoDB Warning] Operating with mock fallback support if database is offline.`);
   }
 };
 

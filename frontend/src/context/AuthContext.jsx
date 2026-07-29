@@ -1,127 +1,91 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react'
-import { authService } from '../services/auth.service'
-import toast from 'react-hot-toast'
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { api } from '../services/api';
 
-const AuthContext = createContext(null)
-
-const initialState = {
-  user: null,
-  token: null,
-  isAuthenticated: false,
-  isLoading: true,
-}
-
-const authReducer = (state, action) => {
-  switch (action.type) {
-    case 'AUTH_LOADING':
-      return { ...state, isLoading: true }
-    case 'AUTH_SUCCESS':
-      return {
-        ...state,
-        user: action.payload.user,
-        token: action.payload.token,
-        isAuthenticated: true,
-        isLoading: false,
-      }
-    case 'AUTH_LOGOUT':
-      return { ...initialState, isLoading: false }
-    case 'PROFILE_UPDATED':
-      return { ...state, user: action.payload }
-    case 'LOADING_DONE':
-      return { ...state, isLoading: false }
-    default:
-      return state
-  }
-}
+const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [state, dispatch] = useReducer(authReducer, initialState)
-
-  // ─────────────────────────────────────────
-  // Load user from localStorage on mount
-  // ─────────────────────────────────────────
-  useEffect(() => {
-    const token = localStorage.getItem('token')
-    const user  = localStorage.getItem('user')
-
-    if (token && user) {
-      try {
-        dispatch({
-          type: 'AUTH_SUCCESS',
-          payload: { user: JSON.parse(user), token },
-        })
-      } catch {
-        localStorage.removeItem('token')
-        localStorage.removeItem('user')
-        dispatch({ type: 'LOADING_DONE' })
-      }
-    } else {
-      dispatch({ type: 'LOADING_DONE' })
-    }
-  }, [])
-
-  // ─────────────────────────────────────────
-  // Register
-  // ─────────────────────────────────────────
-  const register = useCallback(async (data) => {
-    const res = await authService.register(data)
-    const { user, token } = res.data.data
-    localStorage.setItem('token', token)
-    localStorage.setItem('user', JSON.stringify(user))
-    dispatch({ type: 'AUTH_SUCCESS', payload: { user, token } })
-    toast.success(`Welcome, ${user.name}!`)
-    return user
-  }, [])
-
-  // ─────────────────────────────────────────
-  // Login
-  // ─────────────────────────────────────────
-  const login = useCallback(async (data) => {
-    const res = await authService.login(data)
-    const { user, token } = res.data.data
-    localStorage.setItem('token', token)
-    localStorage.setItem('user', JSON.stringify(user))
-    dispatch({ type: 'AUTH_SUCCESS', payload: { user, token } })
-    toast.success(`Welcome back, ${user.name}!`)
-    return user
-  }, [])
-
-  // ─────────────────────────────────────────
-  // Logout
-  // ─────────────────────────────────────────
-  const logout = useCallback(async () => {
+  const [user, setUser] = useState(() => {
     try {
-      await authService.logout()
-    } catch {}
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
-    dispatch({ type: 'AUTH_LOGOUT' })
-    toast.success('Logged out successfully')
-  }, [])
+      const saved = localStorage.getItem('user');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      console.error('Failed to parse saved user session from localStorage:', e);
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+      return null;
+    }
+  });
 
-  // ─────────────────────────────────────────
-  // Update profile in state
-  // ─────────────────────────────────────────
-  const updateUserInState = useCallback((user) => {
-    localStorage.setItem('user', JSON.stringify(user))
-    dispatch({ type: 'PROFILE_UPDATED', payload: user })
-  }, [])
+  const [token, setToken] = useState(() => {
+    return localStorage.getItem('token') || null;
+  });
 
-  const value = {
-    ...state,
-    register,
-    login,
-    logout,
-    updateUserInState,
-  }
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
-}
+  // Sync token state on initial mount / rehydration
+  useEffect(() => {
+    const storedToken = localStorage.getItem('token');
+    if (storedToken) {
+      setToken(storedToken);
+    }
+  }, []);
 
-export const useAuth = () => {
-  const context = useContext(AuthContext)
-  if (!context) throw new Error('useAuth must be used within AuthProvider')
-  return context
-}
+  const login = async (credentials) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await api.login(credentials);
+      setUser(data);
+      localStorage.setItem('user', JSON.stringify(data));
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+        setToken(data.token);
+      }
+      return data;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
 
-export default AuthContext
+  const register = async (userData) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await api.register(userData);
+      setUser(data);
+      localStorage.setItem('user', JSON.stringify(data));
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+        setToken(data.token);
+      }
+      return data;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const logout = () => {
+    setUser(null);
+    setToken(null);
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+  };
+
+  const isArtisan = user && (user.role === 'artisan' || user.role === 'admin');
+
+  return (
+    <AuthContext.Provider value={{ user, token, isArtisan, login, register, logout, loading, error }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = () => useContext(AuthContext);
+
