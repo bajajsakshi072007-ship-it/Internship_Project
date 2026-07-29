@@ -1,82 +1,116 @@
-import React, { lazy, Suspense } from 'react'
-import { Routes, Route } from 'react-router-dom'
-import MainLayout from './layouts/MainLayout.jsx'
-import DashboardLayout from './layouts/DashboardLayout.jsx'
-import ProtectedRoute from './components/common/ProtectedRoute.jsx'
-import RoleRoute from './components/common/RoleRoute.jsx'
-import Spinner from './components/common/Spinner.jsx'
+import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
-// Lazy-loaded pages for code splitting
-const Home            = lazy(() => import('./pages/Home.jsx'))
-const Products        = lazy(() => import('./pages/Products.jsx'))
-const ProductDetails  = lazy(() => import('./pages/ProductDetails.jsx'))
-const Login           = lazy(() => import('./pages/Login.jsx'))
-const Register        = lazy(() => import('./pages/Register.jsx'))
-const Profile         = lazy(() => import('./pages/Profile.jsx'))
-const Cart            = lazy(() => import('./pages/Cart.jsx'))
-const Checkout        = lazy(() => import('./pages/Checkout.jsx'))
-const OrderHistory    = lazy(() => import('./pages/OrderHistory.jsx'))
-const OrderDetails    = lazy(() => import('./pages/OrderDetails.jsx'))
-const Wishlist        = lazy(() => import('./pages/Wishlist.jsx'))
-const SellerDashboard = lazy(() => import('./pages/SellerDashboard.jsx'))
-const SellerProducts  = lazy(() => import('./pages/SellerProducts.jsx'))
-const ProductForm     = lazy(() => import('./pages/ProductForm.jsx'))
-const About           = lazy(() => import('./pages/About.jsx'))
-const Contact         = lazy(() => import('./pages/Contact.jsx'))
-const NotFound        = lazy(() => import('./pages/NotFound.jsx'))
+import { AuthProvider } from './context/AuthContext';
+import { CartProvider } from './context/CartContext';
+import { LanguageProvider } from './context/LanguageContext';
 
-const PageLoader = () => (
-  <div className="flex items-center justify-center min-h-[60vh]">
-    <Spinner size="lg" />
-  </div>
-)
+import Navbar from './components/Navbar';
+import Footer from './components/Footer';
+import ProtectedRoute from './components/ProtectedRoute';
 
-function App() {
+import HomePage from './pages/HomePage';
+import ProductsPage from './pages/ProductsPage';
+import ProductDetailsPage from './pages/ProductDetailsPage';
+import CartPage from './pages/CartPage';
+import CheckoutPage from './pages/CheckoutPage';
+import OrderSuccessPage from './pages/OrderSuccessPage';
+import BuyerOrdersPage from './pages/BuyerOrdersPage';
+import ArtisanDashboardPage from './pages/ArtisanDashboardPage';
+import ArtisanProductsPage from './pages/ArtisanProductsPage';
+import ProductFormPage from './pages/ProductFormPage';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
+
+export default function App() {
   return (
-    <Suspense fallback={<PageLoader />}>
-      <Routes>
-        {/* Public routes with main layout */}
-        <Route element={<MainLayout />}>
-          <Route path="/"                    element={<Home />} />
-          <Route path="/products"            element={<Products />} />
-          <Route path="/products/:id"        element={<ProductDetails />} />
-          <Route path="/about"               element={<About />} />
-          <Route path="/contact"             element={<Contact />} />
+    <BrowserRouter>
+      <AuthProvider>
+        <CartProvider>
+          <LanguageProvider>
+            <div className="min-h-screen flex flex-col justify-between bg-amber-50/40 text-stone-800 font-sans selection:bg-amber-200">
+              <Navbar />
+              <main className="flex-1">
+                <Routes>
+                  <Route path="/" element={<HomePage />} />
+                  <Route path="/products" element={<ProductsPage />} />
+                  <Route path="/products/:id" element={<ProductDetailsPage />} />
+                  <Route path="/cart" element={<CartPage />} />
+                  
+                  {/* Buyer Routes */}
+                  <Route
+                    path="/checkout"
+                    element={
+                      <ProtectedRoute>
+                        <CheckoutPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/order-success"
+                    element={
+                      <ProtectedRoute>
+                        <OrderSuccessPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/my-orders"
+                    element={
+                      <ProtectedRoute>
+                        <BuyerOrdersPage />
+                      </ProtectedRoute>
+                    }
+                  />
 
-          {/* Auth routes (redirect if logged in) */}
-          <Route path="/login"    element={<Login />} />
-          <Route path="/register" element={<Register />} />
+                  {/* Artisan / Seller Routes */}
+                  <Route
+                    path="/artisan/dashboard"
+                    element={
+                      <ProtectedRoute requireArtisan={true}>
+                        <ArtisanDashboardPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/artisan/products"
+                    element={
+                      <ProtectedRoute requireArtisan={true}>
+                        <ArtisanProductsPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/artisan/products/new"
+                    element={
+                      <ProtectedRoute requireArtisan={true}>
+                        <ProductFormPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/artisan/products/edit/:id"
+                    element={
+                      <ProtectedRoute requireArtisan={true}>
+                        <ProductFormPage />
+                      </ProtectedRoute>
+                    }
+                  />
 
-          {/* Protected: any logged-in user */}
-          <Route element={<ProtectedRoute />}>
-            <Route path="/profile" element={<Profile />} />
-          </Route>
-
-          {/* Protected: buyer only */}
-          <Route element={<RoleRoute role="buyer" />}>
-            <Route path="/cart"         element={<Cart />} />
-            <Route path="/checkout"     element={<Checkout />} />
-            <Route path="/orders"       element={<OrderHistory />} />
-            <Route path="/orders/:id"   element={<OrderDetails />} />
-            <Route path="/wishlist"     element={<Wishlist />} />
-          </Route>
-        </Route>
-
-        {/* Protected: seller dashboard layout */}
-        <Route element={<RoleRoute role="seller" />}>
-          <Route element={<DashboardLayout />}>
-            <Route path="/dashboard"                 element={<SellerDashboard />} />
-            <Route path="/dashboard/products"        element={<SellerProducts />} />
-            <Route path="/dashboard/products/new"    element={<ProductForm />} />
-            <Route path="/dashboard/products/:id/edit" element={<ProductForm />} />
-          </Route>
-        </Route>
-
-        {/* 404 */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </Suspense>
-  )
+                  {/* Auth Routes */}
+                  <Route path="/login" element={<LoginPage />} />
+                  <Route path="/register" element={<RegisterPage />} />
+                  <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                  <Route path="/reset-password/:resetToken" element={<ResetPasswordPage />} />
+                </Routes>
+              </main>
+              <Footer />
+            </div>
+          </LanguageProvider>
+        </CartProvider>
+      </AuthProvider>
+    </BrowserRouter>
+  );
 }
-
-export default App
